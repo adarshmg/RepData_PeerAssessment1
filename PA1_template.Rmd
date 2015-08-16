@@ -18,7 +18,7 @@ act <- read.csv("activity.csv",na.strings = "NA",stringsAsFactors = FALSE)
 
 ## What is mean total number of steps taken per day?
 
-Compute the total number of steps taken for each day 
+Compute the mean total number of steps taken for each day 
 ```{r}
 steps_per_day<-tapply(act$steps,act$date,mean,na.rm=TRUE)
 steps_median <- median(steps_per_day,na.rm=TRUE)
@@ -61,44 +61,54 @@ Compute the missing cases and do the below steps.
 
 ```{r}
 missing_cases <- nrow(act[!complete.cases(act),])
-c_act <- data.frame(act)
-for( i in 1:nrow(c_act)){
-  if(is.na(c_act[i,]$steps)){
-    c_act[i,]$steps <- df[df$interval== c_act[i,]$interval,]$steps
+com_act <- data.frame(act)
+for( i in 1:nrow(com_act)){
+  if(is.na(com_act[i,]$steps)){
+    com_act[i,]$steps <- df[df$interval== com_act[i,]$interval,]$steps
   }
 }
-c_steps<-tapply(c_act$steps,c_act$interval,mean,na.rm=TRUE,simplify = TRUE)
-steps_median <- median(c_steps,na.rm=TRUE)
-steps_mean <- mean(c_steps,na.rm=TRUE)
+c_steps<-tapply(com_act$steps,com_act$interval,mean,na.rm=TRUE,simplify = TRUE)
+steps_com_median <- median(c_steps,na.rm=TRUE)
+steps_com_mean <- mean(c_steps,na.rm=TRUE)
 ```
 
-No of missing cases are `r missing_cases`
-Stats with all missing steps filled
-Mean = `r steps_mean`
-Median = `r steps_median`
+No of missing cases are **`r missing_cases`**  
+Stats with all missing steps filled  
+**Mean = `r steps_com_mean`**  
+**Median = `r steps_com_median`**
 
 Histogram of the filled data frame steps is presented below.
 ```{r fig.height=5,fig.width=5}
-hist(c_steps)
+hist(c_steps,xlab = "steps", main ="Histogram of steps")
 ```
 
-## TODO: fill up the missing questions.
+
+Do these values differ from the estimates from the first part of the assignment? 
+```{r,echo=FALSE}
+((steps_com_mean - steps_mean) != 0  && (steps_com_median - steps_median) !=0 )
+```
+
+What is the impact of imputing missing data on the estimates of the total daily number of steps?  
+The difference of mean from the first part without fillup is `r steps_com_mean - steps_mean`  
+The difference of median from the first part without fillup is `r steps_com_median - steps_median`  
+
+
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 The differences in activity patterns between weekdays and weekends are as below
-```{r}
+```{r simulation,results="hide"}
 library(lubridate)
-c_act$datetype  = "weekday"
-c_act[wday(ymd(c_act$date)) %in% c(1,7),]$datetype = "weekend"
+com_act$datetype  = "weekday"
+com_act[wday(ymd(com_act$date)) %in% c(1,7),]$datetype = "weekend"
 
-library(dplyr)
-cpt <- c_act %>% group_by(interval,datetype) %>% summarise_each(funs(mean),steps)
+suppressMessages(library(dplyr))
+cpt <- com_act %>% group_by(interval,datetype) %>% summarise_each(funs(mean),steps)
 ```
 
-## TODO:Fix the plot and write notes.
-```{r fig.height=5,fig.width=5}
+The plot of activity patterns between weekdays and weekends is plotted below
+```{r fig.height=10,fig.width=6}
 library(lattice)
-xyplot(steps ~ interval| datetype, data = cpt, type = "l")
+xyplot(steps ~ interval| datetype, data = cpt, type = "l",layout = c(1,2),ylab = "Number of Steps")
 ```
